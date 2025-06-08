@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ryden - MCQ Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="NotoSansBengali-Regular-normal.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f0f2f5;
+      padding: 30px;
+      color: #333;
+    }
+
+    h2, h3 {
+      text-align: center;
+      color: #222;
+      margin-bottom: 15px;
+    }
+
+    .container {
+      background: #fff;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 800px;
+      margin: auto;
+    }
+
+    label {
+      font-weight: 600;
+      margin-top: 10px;
+      display: block;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      width: 100%;
+      margin: 6px 0 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #007BFF;
+      outline: none;
+      box-shadow: 0 0 5px #007bff55;
+    }
+
+    .option-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .option-row input {
+      flex: 1 1 48%;
+    }
+
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .question-block {
+      background: #f9f9f9;
+      border-left: 6px solid #007BFF;
+      padding: 12px 16px;
+      margin: 12px 0;
+      border-radius: 8px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 13px;
+      color: #777;
+    }
+
+    @media (max-width: 600px) {
+      .option-row input {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>📄 Ryden - MCQ Paper Generator</h2>
+  <h3>Created by Jhantu Muriary</h3>
+
+  <label>📝 Question</label>
+  <input type="text" id="question" placeholder="Enter your question " />
+
+  <div class="option-row">
+    <input type="text" id="optionA" placeholder="🔹 Option A " />
+    <input type="text" id="optionB" placeholder="🔹 Option B " />
+    <input type="text" id="optionC" placeholder="🔹 Option C " />
+    <input type="text" id="optionD" placeholder="🔹 Option D " />
+  </div>
+
+  <button onclick="addQuestion()">➕ Add Question</button>
+  <hr />
+  <h3>📚 Questions List</h3>
+  <div id="questionList"></div>
+
+  <button onclick="generatePDF()">📥 Generate PDF</button>
+
+  <div class="footer">&copy; 2025 Ryden | Created by Jhantu Muriary</div>
+
+  <script>
+    let questions = [];
+
+    window.onload = () => {
+      const stored = localStorage.getItem("questions");
+      if (stored) {
+        questions = JSON.parse(stored);
+        displayQuestions();
+      }
+    };
+
+    function addQuestion() {
+      const q = document.getElementById("question").value;
+      const a = document.getElementById("optionA").value;
+      const b = document.getElementById("optionB").value;
+      const c = document.getElementById("optionC").value;
+      const d = document.getElementById("optionD").value;
+
+      if (q && a && b && c && d) {
+        const questionObj = { q, a, b, c, d };
+        questions.push(questionObj);
+        localStorage.setItem("questions", JSON.stringify(questions));
+        displayQuestions();
+
+        document.getElementById("question").value = "";
+        document.getElementById("optionA").value = "";
+        document.getElementById("optionB").value = "";
+        document.getElementById("optionC").value = "";
+        document.getElementById("optionD").value = "";
+      }
+    }
+
+    function displayQuestions() {
+      const list = document.getElementById("questionList");
+      list.innerHTML = "";
+      questions.forEach((q, i) => {
+        const div = document.createElement("div");
+        div.className = "question-block";
+        div.innerHTML = `
+          <p><strong>Q${i + 1}: ${q.q}</strong></p>
+          <p>A. ${q.a} &nbsp;&nbsp; B. ${q.b} &nbsp;&nbsp; C. ${q.c} &nbsp;&nbsp; D. ${q.d}</p>
+          <button onclick="editQuestion(${i})">✏️ Edit</button>
+          <button onclick="deleteQuestion(${i})">🗑️ Delete</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function deleteQuestion(index) {
+      questions.splice(index, 1);
+      localStorage.setItem("questions", JSON.stringify(questions));
+      displayQuestions();
+    }
+
+    function editQuestion(index) {
+      const q = questions[index];
+      document.getElementById("question").value = q.q;
+      document.getElementById("optionA").value = q.a;
+      document.getElementById("optionB").value = q.b;
+      document.getElementById("optionC").value = q.c;
+      document.getElementById("optionD").value = q.d;
+      questions.splice(index, 1);
+      localStorage.setItem("questions", JSON.stringify(questions));
+      displayQuestions();
+    }
+
+    async function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+    doc.setFont('NotoSansBengali-Regular'); // <-- This is the key!
+
+
+      const watermark = () => {
+  doc.setFontSize(12);
+  doc.setTextColor(255, 99, 132);
+  doc.text("Ryden_MCQ", 10, 13); // First part of watermark
+
+  doc.setTextColor(54, 162, 235);
+  doc.text("made by Jhantu Muriary", 35, 13); // Continue on same line
+};
+
+      watermark();
+
+      let y = 25; // Start after watermark
+
+doc.setFontSize(12);
+doc.setTextColor(0);
+
+questions.forEach((q, i) => {
+  if (i > 0 && i % 20 === 0) {
+    doc.addPage();
+    watermark();
+    y = 25;
+  }
+
+  doc.text(`Q${i + 1}: ${q.q}`, 10, y);
+  y += 7;
+
+  let optionsLine = `A. ${q.a}   B. ${q.b}   C. ${q.c}   D. ${q.d}`;
+  const lines = doc.splitTextToSize(optionsLine, 180);
+  doc.text(lines, 15, y);
+  y += lines.length * 7 + 3;
+});
+
+
+      doc.save("Ryden_MCQ.pdf");
+    }
+  </script>
+</body>
+</html>
